@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -10,6 +11,18 @@ import (
 
 func main() {
 
+}
+
+func crossbar(ogIn chan outGaugeStruct, ogOut [2]chan interface{}) {
+	for {
+		data := <-ogIn
+		for _, c := range ogOut {
+			select {
+			case c <- data:
+			default:
+			}
+		}
+	}
 }
 
 type outGaugeStruct struct {
@@ -60,9 +73,21 @@ func outGaugeListener(address string, c chan outGaugeStruct) {
 
 		select {
 		case c <- decoded:
-			fmt.Println("Wrote!")
 		default:
-			fmt.Print(".")
+		}
+	}
+}
+
+func stdoutOutput(in chan interface{}) {
+	for {
+		message := <-in
+		switch m := message.(type) {
+		case outGaugeStruct:
+			s, err := json.Marshal(m)
+			if err != nil {
+				log.Println(err)
+			}
+			fmt.Println(string(s[:]))
 		}
 	}
 }
