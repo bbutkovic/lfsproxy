@@ -13,7 +13,7 @@ func main() {
 
 }
 
-func crossbar(ogIn chan outGaugeStruct, ogOut [2]chan interface{}) {
+func crossbar(ogIn chan outGaugeStruct, ogOut []chan interface{}) {
 	for {
 		data := <-ogIn
 		for _, c := range ogOut {
